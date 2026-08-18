@@ -57,8 +57,12 @@ export function App() {
       setPrediction(data.prediction);
       setVisuals(data.visuals);
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Error uploading signal CSV");
+      console.error("Upload error details:", err);
+      const detail = err.response?.data?.detail || err.message || "Error uploading signal CSV";
+      const status = err.response?.status ? ` [HTTP ${err.response.status}]` : '';
+      alert(`CSV Upload Failed${status}: ${detail}`);
     } finally {
+      event.target.value = '';
       setLoading(false);
     }
   };
