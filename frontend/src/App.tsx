@@ -37,8 +37,9 @@ export function App() {
       setFeatures(data.features);
       setPrediction(data.prediction);
       setVisuals(data.visuals);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to load demo signal:", err);
+      alert(`API Error (${err.config?.baseURL || 'URL'}): ${err.response?.data?.detail || err.message || "Failed to communicate with backend service"}`);
     } finally {
       setLoading(false);
     }

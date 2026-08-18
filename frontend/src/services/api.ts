@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+let rawBaseUrl = import.meta.env.VITE_API_URL || 'https://nano-vision.onrender.com/api';
+if (!rawBaseUrl.endsWith('/api')) {
+  rawBaseUrl = rawBaseUrl.replace(/\/+$/, '') + '/api';
+}
+
+export const API_BASE_URL = rawBaseUrl;
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
