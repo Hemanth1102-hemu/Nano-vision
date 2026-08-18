@@ -162,17 +162,35 @@ async def upload_csv_signal(file: UploadFile = File(...)):
         
     import io
     try:
+        # First attempt standard CSV reading
         df = pd.read_csv(io.BytesIO(contents))
+        num_cols = df.select_dtypes(include=[np.number]).columns
+        if len(num_cols) > 0:
+            col_name = "amplitude" if "amplitude" in df.columns else num_cols[0]
+            amplitude_vals = [float(x) for x in df[col_name].dropna().values]
+        else:
+            # Fallback: parse single column without header
+            df_no_header = pd.read_csv(io.BytesIO(contents), header=None)
+            num_cols_nh = df_no_header.select_dtypes(include=[np.number]).columns
+            if len(num_cols_nh) > 0:
+                amplitude_vals = [float(x) for x in df_no_header[num_cols_nh[0]].dropna().values]
+            else:
+                raise ValueError("No numeric data found")
     except Exception:
-        raise HTTPException(status_code=400, detail="Malformed CSV file could not be parsed.")
-        
-    # Search for amplitude column or take first numeric column
-    num_cols = df.select_dtypes(include=[np.number]).columns
-    if len(num_cols) == 0:
-        raise HTTPException(status_code=400, detail="CSV file must contain at least one numeric column for signal amplitude.")
-        
-    col_name = "amplitude" if "amplitude" in df.columns else num_cols[0]
-    amplitude_vals = df[col_name].dropna().values.tolist()
+        # Fallback: plain text lines parsing
+        try:
+            text = contents.decode('utf-8', errors='ignore')
+            lines = [line.strip() for line in text.replace(',', '\n').split('\n') if line.strip()]
+            amplitude_vals = []
+            for line in lines:
+                try:
+                    amplitude_vals.append(float(line))
+                except ValueError:
+                    continue
+            if not amplitude_vals:
+                raise HTTPException(status_code=400, detail="CSV file must contain numeric values for signal amplitude.")
+        except Exception:
+            raise HTTPException(status_code=400, detail="Malformed CSV file could not be parsed.")
     
     if len(amplitude_vals) < 100:
         raise HTTPException(status_code=400, detail="Signal must contain at least 100 sample data points.")
