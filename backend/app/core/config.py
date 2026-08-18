@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     
     # Model configuration
-    MODEL_PATH: str = os.getenv("MODEL_PATH", "backend/models/physioxai_rf_model.joblib")
+    MODEL_PATH: str = os.getenv("MODEL_PATH", "models/physioxai_rf_model.joblib" if os.path.exists("models/physioxai_rf_model.joblib") else "backend/models/physioxai_rf_model.joblib")
     
     # Limits & Security Controls
     MAX_FILE_SIZE_BYTES: int = 5 * 1024 * 1024  # 5 MB
